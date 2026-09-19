@@ -1,0 +1,48 @@
+name: Send Daily Weather Report Email
+
+on:
+  # Run automatically every day at 12:00 UTC (07:00 AM EST / 05:30 PM IST)
+  schedule:
+    - cron: '0 12 * * *'
+
+  # Run on push to main or master branch
+  push:
+    branches:
+      - main
+      - master
+
+  # Allows manual execution anytime from the GitHub Actions tab
+  workflow_dispatch:
+    inputs:
+      city:
+        description: 'City (leave empty to use default)'
+        required: false
+        default: ''
+      country_code:
+        description: 'Country Code (e.g. CA, US, IN - leave empty to use default)'
+        required: false
+        default: ''
+
+jobs:
+  weather-email:
+    name: Fetch Weather & Send Email
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run Weather Mail Script
+        env:
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+          SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+          RECEIVER_EMAIL: ${{ secrets.RECEIVER_EMAIL }}
+          CITY: ${{ inputs.city || vars.CITY || secrets.CITY }}
+          COUNTRY_CODE: ${{ inputs.country_code || vars.COUNTRY_CODE || secrets.COUNTRY_CODE }}
+        run: python weather_mail.py
